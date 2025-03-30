@@ -1,0 +1,3 @@
+[submodule "Smarty"]
+	path = Smarty
+	url = git@github.com:HeathK1iff/Smarty.git
