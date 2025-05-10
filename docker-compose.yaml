@@ -1,0 +1,91 @@
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.10.7-management
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=smarty
+      - RABBITMQ_DEFAULT_PASS=smarty
+    ports:      
+      - 15672:15672
+    environment:
+      - TZ=Europe/Moscow      
+    networks:
+      - smarty
+
+  postgres:
+    container_name: postgres
+    image: postgres:14.8-alpine3.18
+    restart: unless-stopped    
+    environment:
+      POSTGRES_DB: "db"
+      POSTGRES_USER: "smarty"
+      POSTGRES_PASSWORD: "smartyPassword"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    command: 
+      -c "max_connections=200"
+      -c "shared_buffers=256MB"
+    volumes:
+      - ./containerd/postgres/data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d db -U smarty -p 5432"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - smarty
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:7.2
+    restart: unless-stopped    
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "default@smarty.com"
+      PGADMIN_DEFAULT_PASSWORD: "smartyPassword"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - ./containerd/pgadmin/data:/var/lib/pgadmin
+    ports:
+      - 5050:80
+    restart: unless-stopped
+    networks:
+      - smarty  
+  
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: ghcr.io/koenkk/zigbee2mqtt
+    restart: unless-stopped
+    volumes:
+      - ./config/zigbbe2mqtt:/app/data
+      - /run/udev:/run/udev:ro
+    ports:
+      - 9051:8080
+    environment:
+      - TZ=Europe/Moscow
+    devices:
+      - /dev/serial/by-id/usb-Texas_Instruments_TI_CC2531_USB_CDC___0X00124B0014D97E82-if00:/dev/ttyACM0
+    networks:
+      - smarty
+  
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./config/mosquitto:/mosquitto/config
+      - ./containerd/mosquitto/data:/mosquitto/data
+      - ./containerd/mosquitto/log:/mosquitto/log
+    ports:
+      - 1883:1883
+    environment:
+      - TZ=Europe/Moscow
+    networks:
+      - smarty
+
+networks:
+  smarty:
+    driver: bridge
+
