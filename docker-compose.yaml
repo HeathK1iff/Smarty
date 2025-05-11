@@ -5,9 +5,10 @@ services:
     restart: unless-stopped
     environment:
       - RABBITMQ_DEFAULT_USER=smarty
-      - RABBITMQ_DEFAULT_PASS=smarty
+      - RABBITMQ_DEFAULT_PASS=smartyPassword
     ports:      
       - 15672:15672
+      - 5672:5672
     environment:
       - TZ=Europe/Moscow      
     networks:
